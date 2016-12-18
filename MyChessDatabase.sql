@@ -13,7 +13,9 @@ COLLATE Finnish_Swedish_CS_AS
 GO
 USE MyChessDatabase
 GO
--- Player Database
+---------------------
+-- Player Database --
+---------------------
 CREATE TABLE Title (
     TitleId int IDENTITY(1,1) NOT NULL,
     TitleName varchar(300),
@@ -84,7 +86,9 @@ CREATE TABLE ELO (
     FOREIGN KEY (PlayerId) REFERENCES Player(PlayerId)
     )
 GO
--- Game database
+-------------------
+-- Game database --
+-------------------
 CREATE TABLE Position (
     PositionId int IDENTITY(1,1) NOT NULL,
     FEN varchar(300) NOT NULL,
@@ -102,13 +106,6 @@ GO
 CREATE INDEX IdX_Position_FENHASH ON Position (FENHASH ASC) -- PositionId kommer automatiskt med
 --CREATE INDEX IdX_Position_FEN ON Position (PositionId ASC, FEN ASC)
 CREATE INDEX IdX_Position_MaterialBalance ON Position (MaterialBalance ASC)
-GO
-CREATE TABLE Moves (
-    ParentPositionId INT NOT NULL,
-    ChildPositionId INT NOT NULL,
-    
-    PRIMARY KEY CLUSTERED (ParentPositionId ASC,ChildPositionId ASC)
-    )
 GO
 CREATE TABLE Evaluation (
 	EvaluationId int IDENTITY(1,1) NOT NULL,
@@ -159,16 +156,31 @@ CREATE TABLE Game (
     FOREIGN KEY (ResultId) REFERENCES Result(ResultId)
     )
 GO
-CREATE TABLE GamePosition (
-    GameId int NOT NULL,
-    PositionId int NOT NULL,
-    MoveNumber int,
-
-    PRIMARY KEY CLUSTERED (GameId ASC,PositionId ASC),
-    FOREIGN KEY (GameId) REFERENCES Game(GameId),
-    FOREIGN KEY (PositionId) REFERENCES Position(PositionId)
+CREATE TABLE Moves (
+    ParentPositionId INT NOT NULL,
+    ChildPositionId INT NOT NULL,
+	GameId INT NOT NULL,
+	MoveNumber int,
+	alfanumerial varchar(6), -- "e2e4", "g1f3", "e1g1", "a7a8Q"
+	pgn varchar(20), -- "e4", "Nf3", "O-O", "a8Q"
+	fullpgn varchar(20), -- "e2-e4", "Ng1-f3", "O-O", "a7-a8=Q"
+    
+    PRIMARY KEY CLUSTERED (ParentPositionId ASC,ChildPositionId ASC),
+	FOREIGN KEY (ParentPositionId) REFERENCES Position(PositionId),
+	FOREIGN KEY (ChildPositionId) REFERENCES Position(PositionId),
+	FOREIGN KEY (GameId) REFERENCES Game(GameId)
     )
 GO
+--CREATE TABLE GamePosition (
+--    GameId int NOT NULL,
+--    PositionId int NOT NULL,
+--    MoveNumber int,
+--
+--    PRIMARY KEY CLUSTERED (GameId ASC,PositionId ASC),
+--    FOREIGN KEY (GameId) REFERENCES Game(GameId),
+--    FOREIGN KEY (PositionId) REFERENCES Position(PositionId)
+--    )
+--GO
 -- Titles
 INSERT INTO Title (TitleName, TitleAbbreviation) VALUES ('International Grand Master','IGM');
 INSERT INTO Title (TitleName, TitleAbbreviation) VALUES ('International Master','IM');
@@ -181,45 +193,42 @@ INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, Cou
 INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Åland','Åland Islands','AX','ALA',248);
 INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Albania','Republic of Albania','AL','ALB',8);
 INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Algeria','People''s Democratic Republic of Algeria','DZ','DZA',12);
-
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('American Samoa','AS','ASM',16);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Andorra','AD','AND',20);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Angola','AO','AGO',24);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Anguilla','AI','AIA',660);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Antarctica','AQ','ATA',10);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Antigua and Barbuda','AG','ATG',28);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Argentina','AR','ARG',32);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Armenia','AM','ARM',51);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Aruba','AW','ABW',533);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Australia','AU','AUS',36);
-
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('American Samoa','American Samoa','AS','ASM',16);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Andorra','Principality of Andorra','AD','AND',20);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Angola','Republic of Angola','AO','AGO',24);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Anguilla','Anguilla','AI','AIA',660);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Antarctica','Antarctica','AQ','ATA',10);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Antigua and Barbuda','Antigua and Barbuda','AG','ATG',28);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Argentina','Argentine Republic','AR','ARG',32);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Armenia','Republic of Armenia','AM','ARM',51);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Aruba','Aruba','AW','ABW',533);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Australia','Commonwealth of Australia','AU','AUS',36);
 INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Austria','Republic of Austria','AT','AUT',40);
-
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Azerbaijan','AZ','AZE',31);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bahamas','BS','BHS',44);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bahrain','BH','BHR',48);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bangladesh','BD','BGD',50);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Barbados','BB','BRB',52);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Belarus','BY','BLR',112);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Belgium','BE','BEL',56);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Belize','BZ','BLZ',84);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Benin','BJ','BEN',204);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bermuda','BM','BMU',60);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bhutan','BT','BTN',64);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bolivia, Plurinational State of','BO','BOL',68);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bonaire, Sint Eustatius and Saba','BQ','BES',535);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bosnia and Herzegovina','BA','BIH',70);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Botswana','BW','BWA',72);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bouvet Island','BV','BVT',74);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Brazil','BR','BRA',76);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('British Indian Ocean Territory','IO','IOT',86);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Brunei Darussalam','BN','BRN',96);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bulgaria','BG','BGR',100);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Burkina Faso','BF','BFA',854);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Burundi','BI','BDI',108);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Cambodia','KH','KHM',116);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Cameroon','CM','CMR',120);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Canada','CA','CAN',124);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Azerbaijan','Republic of Azerbaijan','AZ','AZE',31);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bahamas, The','Commonwealth of the Bahamas','BS','BHS',44);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bahrain','Kingdom of Bahrain','BH','BHR',48);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bangladesh','People''s Republic of Bangladesh','BD','BGD',50);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Barbados','Barbados','BB','BRB',52);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Belarus','Republic of Belarus','BY','BLR',112);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Belgium','Kingdom of Belgium','BE','BEL',56);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Belize','Belize','BZ','BLZ',84);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Benin','Republic of Benin','BJ','BEN',204);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bermuda','Bermuda','BM','BMU',60);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bhutan','Kingdom of Bhutan','BT','BTN',64);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bolivia','Plurinational State of Bolivia','BO','BOL',68);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bonaire, Sint Eustatius and Saba','Bonaire, Sint Eustatius and Saba','BQ','BES',535);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bosnia and Herzegovina','Bosnia and Herzegovina','BA','BIH',70);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Botswana','Republic of Botswana','BW','BWA',72);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bouvet Island','Bouvet Island','BV','BVT',74);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Brazil','Federative Republic of Brazil','BR','BRA',76);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('British Indian Ocean Territory','British Indian Ocean Territory','IO','IOT',86);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Brunei Darussalam','Nation of Brunei, Abode of Peace','BN','BRN',96);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Bulgaria','Republic of Bulgaria','BG','BGR',100);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Burkina Faso','Burkina Faso','BF','BFA',854);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Burundi','Republic of Burundi','BI','BDI',108);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Cambodia','Kingdom of Cambodia','KH','KHM',116);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Cameroon','Republic of Cameroon','CM','CMR',120);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Canada','Canada','CA','CAN',124);
 --INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Cabo Verde','CV','CPV',132);
 --INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Cayman Islands','KY','CYM',136);
 --INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Central African Republic','CF','CAF',140);
@@ -523,30 +532,29 @@ BEGIN
     -- AND FEN=@pFEN AND isWhiteToMove=@pisWhiteToMove AND Castling=@pCastling AND EnPassantSquare=@pEnPassantSquare)
     BEGIN
         INSERT INTO dbo.Position (FEN, FENHASH, isWhiteToMove, Castling, EnPassantSquare, DrawCounter, MaterialBalance) Values (@pFEN, CONVERT(BINARY(20),HASHBYTES('SHA1',@pFEN + ' ' + CONVERT(VARCHAR,@pisWhiteToMove) + @pCastling + @pEnPassantSquare)) , @pisWhiteToMove, @pCastling, @pEnPassantSquare, @pDrawCounter, @pMaterialBalance)
-        --INSERT INTO dbo.Position (FEN, isWhiteToMove, Castling, EnPassantSquare, DrawCounter, MaterialBalance) Values (@pFEN, @pisWhiteToMove, @pCastling, @pEnPassantSquare, @pDrawCounter, @pMaterialBalance)
     END ELSE BEGIN
         IF @pMaterialBalance IS NOT NULL
         BEGIN
             UPDATE dbo.Position SET MaterialBalance=@pMaterialBalance WHERE FENHASH=CONVERT(BINARY(20),HASHBYTES('SHA1',@pFEN + ' ' + CONVERT(VARCHAR,@pisWhiteToMove) + @pCastling + @pEnPassantSquare))  -- AND FEN=@pFEN AND isWhiteToMove=@pisWhiteToMove AND Castling=@pCastling AND EnPassantSquare=@pEnPassantSquare
-            --UPDATE dbo.Position SET MaterialBalance=@pMaterialBalance WHERE FEN=@pFEN AND isWhiteToMove=@pisWhiteToMove AND Castling=@pCastling AND EnPassantSquare=@pEnPassantSquare
         END
     END
 END
 GO
---CREATE PROCEDURE MergePositions
---AS
---BEGIN
----- This won't work on SQL SERVER 2005 - NEEDS TO BE 2008 OR LATER!!!
---    MERGE Position AS target
---    USING TempPosition AS source
---    ON (target.FENHASH = source.FENHASH)
-----    WHEN MATCHED THEN
-----        UPDATE SET target = source
---    WHEN NOT MATCHED THEN
---        INSERT (FEN,FENHASH,isWhiteToMove,Castling,EnPassantSquare,DrawCounter,MaterialBalance)
---        VALUES (source.FEN,source.FENHASH,source.isWhiteToMove,source.Castling,source.EnPassantSquare,source.DrawCounter,source.MaterialBalance);
+CREATE PROCEDURE MergePositions
+AS
+BEGIN
+-- This won't work on SQL SERVER 2005 - NEEDS TO BE 2008 OR LATER!!!
+    MERGE Position AS target
+    USING TempPosition AS source
+    ON (target.FENHASH = source.FENHASH)
+--    WHEN MATCHED THEN
+--        UPDATE SET target = source
+    WHEN NOT MATCHED THEN
+        INSERT (FEN,FENHASH,isWhiteToMove,Castling,EnPassantSquare,DrawCounter,MaterialBalance)
+        VALUES (source.FEN,source.FENHASH,source.isWhiteToMove,source.Castling,source.EnPassantSquare,source.DrawCounter,source.MaterialBalance);
 
---    TRUNCATE TABLE TempPosition
---END
+    TRUNCATE TABLE TempPosition
+END
+GO
 USE master
 GO
