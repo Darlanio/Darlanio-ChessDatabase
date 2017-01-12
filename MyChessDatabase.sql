@@ -164,13 +164,13 @@ CREATE TABLE Moves (
     ParentPositionId INT NOT NULL,
     ChildPositionId INT NOT NULL,
 	GameId INT NOT NULL,
-	MoveNumber int NULL,
+	MoveNumber int NOT NULL,
     DrawCounter int NULL,
 	alfanumerical varchar(6), -- "e2e4", "g1f3", "e1g1", "a7a8Q"
 	pgn varchar(20), -- "e4", "Nf3", "O-O", "a8Q", "a8=Q"
 	fullpgn varchar(20), -- "e2-e4", "Ng1-f3", "O-O", "a7-a8=Q"
     
-    PRIMARY KEY CLUSTERED (ParentPositionId ASC,ChildPositionId ASC, GameId ASC),
+    PRIMARY KEY CLUSTERED (ParentPositionId ASC,ChildPositionId ASC, GameId ASC, MoveNumber ASC),
 	FOREIGN KEY (ParentPositionId) REFERENCES Position(PositionId),
 	FOREIGN KEY (ChildPositionId) REFERENCES Position(PositionId),
 	FOREIGN KEY (GameId) REFERENCES Game(GameId)
