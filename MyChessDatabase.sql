@@ -96,8 +96,7 @@ CREATE TABLE Position (
     isWhiteToMove bit NOT NULL,
     Castling varchar(4), -- Kanske skall ändra typ på denna kolumn?
     EnPassantSquare varchar(2), -- changed from int 2013-07-24
-    DrawCounter int NULL, -- tanken är att den inte skall vara null i partierna, men enskilda ställningar får lagras med null
-    MaterialBalance INT NULL, -- används som flagga för att markera om ställningen är ett barn (NULL) eller om den blivit förälder (rätt värde).
+    MaterialBalance INT NULL, -- used as flag when filling up database. NULL for children, correct calculated value for parents.
 
 	PRIMARY KEY CLUSTERED (PositionId ASC),	
     )
@@ -139,6 +138,11 @@ CREATE TABLE Result (
     PRIMARY KEY (ResultId ASC)
     )
 GO
+INSERT INTO Result (Result) VALUES ('0-0');
+INSERT INTO Result (Result) VALUES ('1-0');
+INSERT INTO Result (Result) VALUES ('1/2-1/2');
+INSERT INTO Result (Result) VALUES ('0-1');
+GO
 CREATE TABLE Game (
     GameId int IDENTITY(1,1) NOT NULL,
     EventId int,
@@ -160,12 +164,13 @@ CREATE TABLE Moves (
     ParentPositionId INT NOT NULL,
     ChildPositionId INT NOT NULL,
 	GameId INT NOT NULL,
-	MoveNumber int,
-	alfanumerial varchar(6), -- "e2e4", "g1f3", "e1g1", "a7a8Q"
-	pgn varchar(20), -- "e4", "Nf3", "O-O", "a8Q"
+	MoveNumber int NULL,
+    DrawCounter int NULL,
+	alfanumerical varchar(6), -- "e2e4", "g1f3", "e1g1", "a7a8Q"
+	pgn varchar(20), -- "e4", "Nf3", "O-O", "a8Q", "a8=Q"
 	fullpgn varchar(20), -- "e2-e4", "Ng1-f3", "O-O", "a7-a8=Q"
     
-    PRIMARY KEY CLUSTERED (ParentPositionId ASC,ChildPositionId ASC),
+    PRIMARY KEY CLUSTERED (ParentPositionId ASC,ChildPositionId ASC, GameId ASC),
 	FOREIGN KEY (ParentPositionId) REFERENCES Position(PositionId),
 	FOREIGN KEY (ChildPositionId) REFERENCES Position(PositionId),
 	FOREIGN KEY (GameId) REFERENCES Game(GameId)
@@ -229,13 +234,13 @@ INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, Cou
 INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Cambodia','Kingdom of Cambodia','KH','KHM',116);
 INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Cameroon','Republic of Cameroon','CM','CMR',120);
 INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Canada','Canada','CA','CAN',124);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Cabo Verde','CV','CPV',132);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Cayman Islands','KY','CYM',136);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Central African Republic','CF','CAF',140);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Chad','TD','TCD',148);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Chile','CL','CHL',152);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('China','CN','CHN',156);
---INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Christmas Island','CX','CXR',162);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Cape Verde','Republic of Cabo Verde','CV','CPV',132);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Cayman Islands','Cayman Islands','KY','CYM',136);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Central African Republic','Central African Republic','CF','CAF',140);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Chad','Republic of Chad','TD','TCD',148);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Chile','Republic of Chile','CL','CHL',152);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('China','People''s Republic of China','CN','CHN',156);
+INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Christmas Island','Christmas Island','CX','CXR',162);
 --INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Cocos (Keeling) Islands','CC','CCK',166);
 --INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Colombia','CO','COL',170);
 --INSERT INTO [MyChessDatabase].[dbo].[Country] (CountryName, CountryFullName, CountryAlpha2Code, CountryAbbreviation, CountryNumericCode) VALUES ('Comoros','KM','COM',174);
@@ -514,30 +519,46 @@ INSERT INTO dbo.PlayerName (PlayerId, FirstName, LastName) VALUES (@PlayerId, 'M
 SELECT @CountryId=CountryId FROM [MyChessDatabase].[dbo].[Country] WHERE CountryAbbreviation='NOR'
 INSERT INTO dbo.PlayerCountry (PlayerId, CountryId, StartDate, EndDate) VALUES (@PlayerId, @CountryId, '1990-11-30', NULL);
 GO
+CREATE FUNCTION GetFENHASH
+(   
+    @pFEN varchar(300),
+    @pisWhiteToMove bit,
+    @pCastling varchar(4),
+    @pEnPassantSquare varchar(2)
+)
+RETURNS BINARY(20)
+AS
+BEGIN
+    DECLARE @hash int
+	SET @hash = CONVERT(BINARY(20),HASHBYTES('SHA1',@pFEN + ' ' + CONVERT(VARCHAR,@pisWhiteToMove) + @pCastling + @pEnPassantSquare))
+    RETURN @hash
+END
+GO
 CREATE PROCEDURE SavePosition
 (
     @pFEN varchar(300),
     @pisWhiteToMove bit,
     @pCastling varchar(4),
     @pEnPassantSquare varchar(2),
-    @pDrawCounter int,
     @pMaterialBalance int
 )
 AS
 BEGIN
     IF NOT EXISTS (
-        SELECT NULL FROM dbo.Position WHERE FENHASH=
-            CONVERT(BINARY(20),HASHBYTES('SHA1',@pFEN + ' ' + CONVERT(VARCHAR,@pisWhiteToMove) + @pCastling + @pEnPassantSquare))
+--        SELECT NULL FROM dbo.Position WHERE FENHASH=dbo.GetFENHASH(@pFEN,@pisWhiteToMove,@pCastling,@pEnPassantSquare)
+        SELECT NULL FROM dbo.Position WHERE FENHASH=CONVERT(BINARY(20),HASHBYTES('SHA1',@pFEN + ' ' + CONVERT(VARCHAR,@pisWhiteToMove) + @pCastling + @pEnPassantSquare))
                   ) 
     -- AND FEN=@pFEN AND isWhiteToMove=@pisWhiteToMove AND Castling=@pCastling AND EnPassantSquare=@pEnPassantSquare)
     BEGIN
-        INSERT INTO dbo.Position (FEN, FENHASH, isWhiteToMove, Castling, EnPassantSquare, DrawCounter, MaterialBalance) Values (@pFEN, CONVERT(BINARY(20),HASHBYTES('SHA1',@pFEN + ' ' + CONVERT(VARCHAR,@pisWhiteToMove) + @pCastling + @pEnPassantSquare)) , @pisWhiteToMove, @pCastling, @pEnPassantSquare, @pDrawCounter, @pMaterialBalance)
+        INSERT INTO dbo.Position (FEN, FENHASH, isWhiteToMove, Castling, EnPassantSquare, MaterialBalance) Values (@pFEN, CONVERT(BINARY(20),HASHBYTES('SHA1',@pFEN + ' ' + CONVERT(VARCHAR,@pisWhiteToMove) + @pCastling + @pEnPassantSquare)) , @pisWhiteToMove, @pCastling, @pEnPassantSquare, @pMaterialBalance)
     END ELSE BEGIN
         IF @pMaterialBalance IS NOT NULL
         BEGIN
             UPDATE dbo.Position SET MaterialBalance=@pMaterialBalance WHERE FENHASH=CONVERT(BINARY(20),HASHBYTES('SHA1',@pFEN + ' ' + CONVERT(VARCHAR,@pisWhiteToMove) + @pCastling + @pEnPassantSquare))  -- AND FEN=@pFEN AND isWhiteToMove=@pisWhiteToMove AND Castling=@pCastling AND EnPassantSquare=@pEnPassantSquare
         END
     END
+	--SELECT PositionId FROM dbo.Position WHERE FENHASH=dbo.GetFENHASH(@pFEN,@pisWhiteToMove,@pCastling,@pEnPassantSquare) --AND FEN=@pFEN AND isWhiteToMove=@pisWhiteToMove AND Castling=@pCastling AND EnPassantSquare=@pEnPassantSquare
+	SELECT PositionId FROM dbo.Position WHERE FENHASH = CONVERT(BINARY(20),HASHBYTES('SHA1',@pFEN + ' ' + CONVERT(VARCHAR,@pisWhiteToMove) + @pCastling + @pEnPassantSquare))
 END
 GO
 CREATE PROCEDURE MergePositions
