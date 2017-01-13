@@ -106,6 +106,18 @@ CREATE INDEX IdX_Position_FENHASH ON Position (FENHASH ASC) -- PositionId kommer
 --CREATE INDEX IdX_Position_FEN ON Position (PositionId ASC, FEN ASC)
 CREATE INDEX IdX_Position_MaterialBalance ON Position (MaterialBalance ASC)
 GO
+CREATE TABLE TempPosition (
+    PositionId int IDENTITY(1,1) NOT NULL,
+    FEN varchar(300) NOT NULL,
+    FENHASH BINARY(20) NOT NULL,
+    isWhiteToMove bit NOT NULL,
+    Castling varchar(4), -- Kanske skall ändra typ på denna kolumn?
+    EnPassantSquare varchar(2), -- changed from int 2013-07-24
+    MaterialBalance INT NULL, -- used as flag when filling up database. NULL for children, correct calculated value for parents.
+
+	PRIMARY KEY CLUSTERED (PositionId ASC),	
+    )
+GO
 CREATE TABLE Evaluation (
 	EvaluationId int IDENTITY(1,1) NOT NULL,
 	PositionId int NOT NULL,
@@ -567,12 +579,13 @@ BEGIN
 -- This won't work on SQL SERVER 2005 - NEEDS TO BE 2008 OR LATER!!!
     MERGE Position AS target
     USING TempPosition AS source
-    ON (target.FENHASH = source.FENHASH)
+    ON (target.FENHASH = source.FENHASH AND target.FEN=source.FEN AND target.isWhiteToMove=source.isWhiteToMove AND target.Castling=source.Castling AND target.EnPassantSquare=source.EnPassantSquare)
 --    WHEN MATCHED THEN
---        UPDATE SET target = source
+--        UPDATE SET target.isWhiteToMove = source.isWhiteToMove
     WHEN NOT MATCHED THEN
-        INSERT (FEN,FENHASH,isWhiteToMove,Castling,EnPassantSquare,DrawCounter,MaterialBalance)
-        VALUES (source.FEN,source.FENHASH,source.isWhiteToMove,source.Castling,source.EnPassantSquare,source.DrawCounter,source.MaterialBalance);
+        INSERT (FEN,FENHASH,isWhiteToMove,Castling,EnPassantSquare,MaterialBalance)
+        VALUES (source.FEN,source.FENHASH,source.isWhiteToMove,source.Castling,source.EnPassantSquare,source.MaterialBalance);
+    --OUTPUT inserted.*, deleted.*;
 
     TRUNCATE TABLE TempPosition
 END
