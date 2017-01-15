@@ -541,9 +541,7 @@ CREATE FUNCTION GetFENHASH
 RETURNS BINARY(20)
 AS
 BEGIN
-    DECLARE @hash int
-	SET @hash = CONVERT(BINARY(20),HASHBYTES('SHA1',@pFEN + ' ' + CONVERT(VARCHAR,@pisWhiteToMove) + @pCastling + @pEnPassantSquare))
-    RETURN @hash
+    RETURN CONVERT(BINARY(20),HASHBYTES('SHA1',@pFEN + ' ' + CONVERT(VARCHAR,@pisWhiteToMove) + @pCastling + @pEnPassantSquare))
 END
 GO
 CREATE PROCEDURE SavePosition
