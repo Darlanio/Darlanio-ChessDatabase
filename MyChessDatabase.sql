@@ -106,18 +106,6 @@ CREATE INDEX IdX_Position_FENHASH ON Position (FENHASH ASC) -- PositionId kommer
 --CREATE INDEX IdX_Position_FEN ON Position (PositionId ASC, FEN ASC)
 CREATE INDEX IdX_Position_MaterialBalance ON Position (MaterialBalance ASC)
 GO
-CREATE TABLE TempPosition (
-    PositionId int IDENTITY(1,1) NOT NULL,
-    FEN varchar(300) NOT NULL,
-    FENHASH BINARY(20) NOT NULL,
-    isWhiteToMove bit NOT NULL,
-    Castling varchar(4), -- Kanske skall ändra typ på denna kolumn?
-    EnPassantSquare varchar(2), -- changed from int 2013-07-24
-    MaterialBalance INT NULL, -- used as flag when filling up database. NULL for children, correct calculated value for parents.
-
-	PRIMARY KEY CLUSTERED (PositionId ASC),	
-    )
-GO
 CREATE TABLE Evaluation (
 	EvaluationId int IDENTITY(1,1) NOT NULL,
 	PositionId int NOT NULL,
@@ -163,7 +151,8 @@ CREATE TABLE Game (
     WhiteId int,
     BlackId int,
     ResultId int,
-    PGN varchar(8000),
+	PGNFilename varchar(1000),
+	PGNFileGameNumber int,
 
 	PRIMARY KEY CLUSTERED (GameId ASC),
     FOREIGN KEY (EventId) REFERENCES [Event](EventId),
@@ -188,16 +177,6 @@ CREATE TABLE Moves (
 	FOREIGN KEY (GameId) REFERENCES Game(GameId)
     )
 GO
---CREATE TABLE GamePosition (
---    GameId int NOT NULL,
---    PositionId int NOT NULL,
---    MoveNumber int,
---
---    PRIMARY KEY CLUSTERED (GameId ASC,PositionId ASC),
---    FOREIGN KEY (GameId) REFERENCES Game(GameId),
---    FOREIGN KEY (PositionId) REFERENCES Position(PositionId)
---    )
---GO
 -- Titles
 INSERT INTO Title (TitleName, TitleAbbreviation) VALUES ('International Grand Master','IGM');
 INSERT INTO Title (TitleName, TitleAbbreviation) VALUES ('International Master','IM');
@@ -531,6 +510,61 @@ INSERT INTO dbo.PlayerName (PlayerId, FirstName, LastName) VALUES (@PlayerId, 'M
 SELECT @CountryId=CountryId FROM [MyChessDatabase].[dbo].[Country] WHERE CountryAbbreviation='NOR'
 INSERT INTO dbo.PlayerCountry (PlayerId, CountryId, StartDate, EndDate) VALUES (@PlayerId, @CountryId, '1990-11-30', NULL);
 GO
+CREATE TABLE TempPosition (
+    PositionId int IDENTITY(1,1) NOT NULL,
+    FEN varchar(300) NOT NULL,
+    FENHASH BINARY(20) NOT NULL,
+    isWhiteToMove bit NOT NULL,
+    Castling varchar(4), -- Kanske skall ändra typ på denna kolumn?
+    EnPassantSquare varchar(2), -- changed from int 2013-07-24
+    MaterialBalance INT NULL, -- used as flag when filling up database. NULL for children, correct calculated value for parents.
+
+	PRIMARY KEY CLUSTERED (PositionId ASC),	
+    )
+GO
+CREATE TABLE TempGame
+(
+    TempGameId int identity(1,1) primary key,
+
+	PGNFilename varchar(1000),
+	PGNFileGameNumber int
+)
+GO
+CREATE TABLE TempMoveImport
+(
+    TempMoveImportId int identity(1,1) primary key,
+
+    ParentPositionFEN varchar(300),
+	ParentIsWhiteToMove bit,
+	ParentCastling varchar(4),
+	ParentEnPassantSquare varchar(2),
+
+    ChildPositionFEN varchar(300),
+	ChildIsWhiteToMove bit,
+	ChildCastling varchar(4),
+	ChildEnPassantSquare varchar(2),
+
+	TempGameId int,
+	MoveNumber int,
+	DrawCounter int,
+	alfanumerical varchar(6),
+	pgn varchar(20),
+	fullpgn varchar(20),
+
+    FOREIGN KEY (TempGameId) REFERENCES TempGame(TempGameId)
+)
+GO
+CREATE TABLE TempGameHeader
+(
+    TempGameHeaderId int identity(1,1) primary key,
+	TempGameId int,
+	Tag varchar(300),
+	Information varchar(max),
+
+	FOREIGN KEY (TempGameId) REFERENCES TempGame(TempGameId)
+)
+GO
+
 CREATE FUNCTION GetFENHASH
 (   
     @pFEN varchar(300),
